@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Degradation Router</title>
+<style>
+  :root { --bg:#fafafa; --fg:#111; --muted:#666; --card:#fff; --line:#ddd; --ok:#0a7d32; --warn:#9a6700; --err:#b42318; --info:#1d4ed8; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#111; --fg:#eee; --muted:#aaa; --card:#1b1b1b; --line:#333; } }
+  body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.5 system-ui, sans-serif; }
+  main { max-width:760px; margin:0 auto; padding:16px; }
+  form, .faults { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+  input { flex:1; min-width:200px; padding:8px; border:1px solid var(--line); border-radius:6px; background:var(--card); color:var(--fg); }
+  button { padding:8px 12px; border:1px solid var(--line); border-radius:6px; background:var(--card); color:var(--fg); cursor:pointer; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:12px; margin:8px 0; }
+  .banner { padding:8px 12px; border-radius:6px; margin:8px 0; border-left:4px solid; }
+  .banner.info { border-color:var(--info); } .banner.warning { border-color:var(--warn); } .banner.error { border-color:var(--err); }
+  .badge { display:inline-block; font-size:12px; padding:2px 8px; border-radius:99px; border:1px solid; }
+  .badge.ok { color:var(--ok); } .badge.warn { color:var(--warn); }
+  .muted { color:var(--muted); font-size:13px; }
+  pre { overflow:auto; font-size:12px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Degradation Router</h1>
+  <p class="muted">Frontier → Mid → Local → Cache. Toggle provider outages, then ask again. The server returns a JSON component spec; this page renders it.</p>
+  <form id="f"><input id="q" value="How do I reset my router password?"><button>Ask</button></form>
+  <div class="faults" id="faults"></div>
+  <div id="out"></div>
+  <details><summary class="muted">Raw spec</summary><pre id="raw"></pre></details>
+</main>
+<script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script>
+const h = React.createElement;
+function Node({ n }) {
+  const kids = (n.children || []).map((c, i) => h(Node, { n: c, key: i }));
+  switch (n.type) {
+    case "page": return h("section", null, h("h2", null, n.title), kids);
+    case "banner": return h("div", { className: "banner " + n.level }, n.text);
+    case "card": return h("div", { className: "card" }, h("strong", null, n.title), kids);
+    case "text": return h("p", null, n.text);
+    case "badge": return h("span", { className: "badge " + n.tone }, n.label);
+    case "metric": return h("div", { className: "muted" }, n.label + ": " + n.value);
+    case "list": return h("ul", { className: "muted" }, n.items.map((t, i) => h("li", { key: i }, t)));
+    case "actions": return h("div", { className: "faults" }, kids);
+    case "button": return h("button", { onClick: () => n.action === "retry" && ask() }, n.label);
+    default: return h("div", { className: "banner error" }, "Unknown component: " + n.type);
+  }
+}
+const root = ReactDOM.createRoot(document.getElementById("out"));
+async function ask() {
+  const q = document.getElementById("q").value;
+  const r = await fetch("/api/ui?q=" + encodeURIComponent(q)).then(r => r.json());
+  root.render(h(Node, { n: r.spec }));
+  document.getElementById("raw").textContent = JSON.stringify(r, null, 2);
+  renderFaults();
+}
+async function renderFaults() {
+  const s = await fetch("/api/state").then(r => r.json());
+  const el = document.getElementById("faults"); el.innerHTML = "";
+  for (const p of s.providers) {
+    const b = document.createElement("button");
+    b.textContent = (p.down ? "▶ restore " : "■ take down ") + p.tier + " [" + s.breakers[p.name] + "]";
+    b.onclick = async () => { await fetch("/api/faults", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ provider: p.name, down: !p.down }) }); renderFaults(); };
+    el.appendChild(b);
+  }
+}
+document.getElementById("f").onsubmit = e => { e.preventDefault(); ask(); };
+renderFaults();
+</script>
+</body>
+</html>

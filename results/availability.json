@@ -1,0 +1,173 @@
+{
+  "kind": "MEASURED on MOCKED providers with INJECTED faults",
+  "date": "2026-11-09",
+  "requests": 1200,
+  "batch_concurrency": 20,
+  "seed": 42,
+  "timeouts_ms": {
+    "frontier": 200,
+    "mid": 100,
+    "local": 50
+  },
+  "scenarios": {
+    "A_frontier_30pct_503": "frontier returns 503 on 30% of calls for the whole run",
+    "B_frontier_outage_mid_flaky": "frontier hard-down for requests 300-899; mid 20% 503s throughout",
+    "C_total_outage_tail": "all three providers hard-down for the last 300 requests (900-1199)"
+  },
+  "results": {
+    "A_frontier_30pct_503": {
+      "frontier_only": {
+        "availability": 0.7042,
+        "served": 845,
+        "failed": 355,
+        "tier_counts": {
+          "frontier": 845,
+          "none": 355
+        },
+        "latency_ms_p50": 61.2,
+        "latency_ms_p95": 78.4,
+        "failed_upstream_attempts": 355,
+        "breaker_short_circuits": 0,
+        "breaker_trips": 0,
+        "cost_usd": 10.14,
+        "wall_s": 4.75
+      },
+      "chain_no_breaker_no_cache": {
+        "availability": 1.0,
+        "served": 1200,
+        "failed": 0,
+        "tier_counts": {
+          "frontier": 845,
+          "mid": 355
+        },
+        "latency_ms_p50": 67.7,
+        "latency_ms_p95": 99.5,
+        "failed_upstream_attempts": 355,
+        "breaker_short_circuits": 0,
+        "breaker_trips": 0,
+        "cost_usd": 10.85,
+        "wall_s": 6.1
+      },
+      "chain_breaker_cache": {
+        "availability": 1.0,
+        "served": 1200,
+        "failed": 0,
+        "tier_counts": {
+          "frontier": 159,
+          "mid": 1041
+        },
+        "latency_ms_p50": 27.5,
+        "latency_ms_p95": 77.1,
+        "failed_upstream_attempts": 64,
+        "breaker_short_circuits": 977,
+        "breaker_trips": 8,
+        "cost_usd": 3.99,
+        "wall_s": 2.89
+      }
+    },
+    "B_frontier_outage_mid_flaky": {
+      "frontier_only": {
+        "availability": 0.5,
+        "served": 600,
+        "failed": 600,
+        "tier_counts": {
+          "frontier": 600,
+          "none": 600
+        },
+        "latency_ms_p50": 61.1,
+        "latency_ms_p95": 77.8,
+        "failed_upstream_attempts": 600,
+        "breaker_short_circuits": 0,
+        "breaker_trips": 0,
+        "cost_usd": 7.2,
+        "wall_s": 4.73
+      },
+      "chain_no_breaker_no_cache": {
+        "availability": 1.0,
+        "served": 1200,
+        "failed": 0,
+        "tier_counts": {
+          "frontier": 600,
+          "local": 133,
+          "mid": 467
+        },
+        "latency_ms_p50": 74.3,
+        "latency_ms_p95": 105.2,
+        "failed_upstream_attempts": 733,
+        "breaker_short_circuits": 0,
+        "breaker_trips": 0,
+        "cost_usd": 8.134,
+        "wall_s": 5.7
+      },
+      "chain_breaker_cache": {
+        "availability": 1.0,
+        "served": 1200,
+        "failed": 0,
+        "tier_counts": {
+          "frontier": 401,
+          "local": 173,
+          "mid": 626
+        },
+        "latency_ms_p50": 32.0,
+        "latency_ms_p95": 74.8,
+        "failed_upstream_attempts": 195,
+        "breaker_short_circuits": 777,
+        "breaker_trips": 13,
+        "cost_usd": 6.064,
+        "wall_s": 3.41
+      }
+    },
+    "C_total_outage_tail": {
+      "frontier_only": {
+        "availability": 0.75,
+        "served": 900,
+        "failed": 300,
+        "tier_counts": {
+          "frontier": 900,
+          "none": 300
+        },
+        "latency_ms_p50": 60.7,
+        "latency_ms_p95": 78.6,
+        "failed_upstream_attempts": 300,
+        "breaker_short_circuits": 0,
+        "breaker_trips": 0,
+        "cost_usd": 10.8,
+        "wall_s": 4.76
+      },
+      "chain_no_breaker_no_cache": {
+        "availability": 0.75,
+        "served": 900,
+        "failed": 300,
+        "tier_counts": {
+          "frontier": 900,
+          "none": 300
+        },
+        "latency_ms_p50": 60.9,
+        "latency_ms_p95": 78.5,
+        "failed_upstream_attempts": 900,
+        "breaker_short_circuits": 0,
+        "breaker_trips": 0,
+        "cost_usd": 10.8,
+        "wall_s": 5.32
+      },
+      "chain_breaker_cache": {
+        "availability": 0.955,
+        "served": 1146,
+        "failed": 54,
+        "tier_counts": {
+          "cache_exact": 243,
+          "cache_semantic": 3,
+          "frontier": 900,
+          "none": 54
+        },
+        "latency_ms_p50": 56.3,
+        "latency_ms_p95": 79.4,
+        "failed_upstream_attempts": 45,
+        "breaker_short_circuits": 855,
+        "breaker_trips": 17,
+        "cost_usd": 10.8,
+        "wall_s": 5.42
+      }
+    }
+  }
+}
